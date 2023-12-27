@@ -1,0 +1,44 @@
+metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+processors:
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+
+
+metricbeat.modules:
+- module: system
+  metricsets:
+    #- cpu             # CPU usage
+    #- load            # CPU load averages
+    #- memory          # Memory usage
+    - network         # Network IO
+    #- process         # Per process metrics
+    #- process_summary # Process summary
+    #- uptime          # System Uptime
+    #- socket_summary  # Socket summary
+    #- core           # Per CPU core usage
+    #- diskio         # Disk IO
+    #- filesystem     # File system usage for each mountpoint
+    #- fsstat         # File system summary metrics
+    #- raid           # Raid
+    #- socket         # Sockets and connection info (linux only)
+    #- service        # systemd service information
+  enabled: true
+  period: 10s
+  processes: ['.*']
+
+  # Configure the mount point of the host’s filesystem for use in monitoring a host from within a container
+  #hostfs: "/hostfs"
+
+  # Configure the metric types that are included by these metricsets.
+  cpu.metrics:  ["percentages","normalized_percentages"]  # The other available option is ticks.
+  core.metrics: ["percentages"]
+
+
+output.kafka:
+  hosts: ["13.125.191.87:9092"]
+  topic: "my_topic"
+  reachable_only: false
+  max_message_bytes: 1000000                              

@@ -1,0 +1,70 @@
+{
+    "index_patterns": ["weather-*"], 
+    "template":{
+    "settings" : {
+      "index.refresh_interval" : "5s",
+      "analysis" : {
+        "tokenizer":{
+            "korean_nori":{
+                "type": "nori_tokenizer",
+                "decompound_mode":"mixed"
+            }
+        },
+        "analyzer" : {
+            "nori_analyzer" : {
+                "type" : "custom",
+                "tokenizer":"korean_nori",
+                "filter":[
+                    "nori_posfilter"
+                ]
+            }
+        },
+        "filter":{
+            "nori_posfilter":{
+                "type":"nori_part_of_speech",
+                "stoptags":[
+                    "E",
+                    "IC",
+                    "J",
+                    "MAG",
+                    "MAJ",
+                    "MM",
+                    "SP",
+                    "SSC",
+                    "SSO",
+                    "SC",
+                    "SE",
+                    "XPN",
+                    "XSA",
+                    "XSN",
+                    "XSV",
+                    "UNA",
+                    "NA",
+                    "VSV",
+                    "SF",
+                    "VA",
+                    "VCN",
+                    "VCP",
+                    "VX",
+                    "VV",
+                    "NR",
+                    "XR",
+                    "NP",
+                    "SN",
+                    "NNB"
+                ]
+            }
+        }
+      }
+    },
+    "mappings" : {
+        "properties" : {
+            "token_data":{
+                "type":"text",
+                "analyzer": "nori_analyzer",
+                "fielddata":true
+            }
+        } 
+    }
+    }
+}

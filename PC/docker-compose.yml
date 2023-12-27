@@ -1,0 +1,94 @@
+version: '3.8'
+services:
+  metricbeat:
+    user: root
+    container_name: metricbeat
+    image: docker.elastic.co/beats/metricbeat:8.4.2
+    volumes:
+      - ./metricbeat/metricbeat.docker.yml:/usr/share/metricbeat/metricbeat.yml
+    networks:
+      default_bridge:
+        ipv4_address: 172.20.0.10
+    deploy:
+      mode: global
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+  kafka-0:
+    image: docker.io/bitnami/kafka:3.4
+    container_name: kafka-0
+    ports:
+      - "9092"
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@172.20.0.6:9093,1@172.20.0.7:9093,2@172.20.0.8:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - BITNAMI_DEBUG=yes
+    volumes:
+      - kafka_0_data:/bitnami/kafka
+    networks:
+      default_bridge:
+        ipv4_address: 172.20.0.6    
+
+  kafka-1:
+    image: docker.io/bitnami/kafka:3.4
+    container_name: kafka-1
+    ports:
+      - "9092"
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@172.20.0.6:9093,1@172.20.0.7:9093,2@172.20.0.8:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+    networks:
+      default_bridge:
+        ipv4_address: 172.20.0.7
+
+  kafka-2:
+    image: docker.io/bitnami/kafka:3.4
+    container_name: kafka-2
+    ports:
+      - "9092"
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=2
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@172.20.0.6:9093,1@172.20.0.7:9093,2@172.20.0.8:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - BITNAMI_DEBUG=yes
+    volumes:
+      - kafka_2_data:/bitnami/kafka
+    networks:
+      default_bridge:
+        ipv4_address: 172.20.0.8
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui_elk
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=my_kafka
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-0:9092
+    networks:
+      default_bridge:
+        ipv4_address: 172.20.0.9
+volumes:
+  kafka_0_data:
+    driver: local
+  kafka_1_data:
+    driver: local
+  kafka_2_data:
+    driver: local
+
+networks:
+  default_bridge:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

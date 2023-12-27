@@ -1,0 +1,82 @@
+version: '3.8'
+services:
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.4.2
+    environment:
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    stdin_open: true
+    tty: true
+    networks:
+      default_bridge:
+        ipv4_address: 172.21.0.2
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"  
+  logstash:
+    container_name: logstash
+    image: logstash:8.4.2
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/templates:/usr/share/logstash/templates
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+    ports:
+      - 5044:5044
+    links:
+      - elasticsearch:elasticsearch
+    depends_on:
+      - elasticsearch
+    stdin_open: true
+    tty: true
+    networks:
+      default_bridge:
+        ipv4_address: 172.21.0.4 
+  kibana:
+    container_name: kibana
+    image: kibana:8.4.2
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 5601:5601
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    links:
+      - elasticsearch:elasticsearch
+    depends_on:
+      - elasticsearch
+    stdin_open: true
+    tty: true
+    networks:
+      default_bridge:
+        ipv4_address: 172.21.0.3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+networks:
+  default_bridge:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/16
